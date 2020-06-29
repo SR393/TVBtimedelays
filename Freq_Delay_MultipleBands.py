@@ -2,8 +2,6 @@ import numpy as numpy
 import numpy.linalg as nplinalg
 import scipy.signal as scp
 
-#From internet somewhere
-
 def normalize(v):
     
     norm = nplinalg.norm(v)
@@ -33,21 +31,6 @@ def find_n_peaks(x, n):
 
     return [n_peaks, n_peak_heights]
 
-#Analytic phases for a particular parameter configuration
-def pyphase_nodes(y):
-
-    phases = numpy.zeros(y.shape)
-
-    for i in range(y.shape[1]):
-
-        cent = y[:, i] - numpy.mean(y[:, i])
-        ansig = scp.hilbert(cent)
-        phase1 = numpy.angle(ansig)
-        phase2 = numpy.unwrap(phase1)
-        phases[:, i] = phase2
-
-    return phases
-
 from tvb.simulator.lab import *
 from tvb.datatypes import time_series
 from tvb.basic.config import settings
@@ -72,14 +55,11 @@ mon_tavg = monitors.TemporalAverage(period=2**-2)
 what_to_watch = (mon_tavg, )
 
 nodes = numpy.arange(0, 74)
-#Variable parameters are intra- and interhemispheric tract length distribution variance, parametrised here by integer n
+
 n = [2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9]
 numtrials = len(n)
 numtrials2 = 12
 delay_points = numpy.asarray(n)*2.5
-
-#Plot variance of variance and metastability over parameter variations
-cnt = 0
 
 upto = 1
 
