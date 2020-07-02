@@ -57,7 +57,7 @@ import os as os
 white_matter = connectivity.Connectivity.from_file()
 speed = 2.0
 white_matter.speed = numpy.array([speed])
-white_matter_coupling = coupling.Linear(a=numpy.array([0.025]))
+white_matter_coupling = coupling.Linear(a=numpy.array([0.022]))
 weights = white_matter.weights
 
 inter_hem_len = numpy.full((38, 38), 120)
@@ -77,7 +77,7 @@ delay_points = numpy.asarray(n)*(10/speed)
 
 upto = 1
 
-folder = r'L:\Lab_JamesR\sebastianR\Data\DelaysVariance\Spiegler and Jirsa Parameters\Freq_Delay_Runs\Group7(Random ICsandHistories)(CP0.025 InterDels120 Sp2.0 Var 10)(Gamma Dist)'
+folder = r'L:\Lab_JamesR\sebastianR\Data\DelaysVariance\Ghosh et al Parameters\Freq_Delay_Runs\Group1(Random ICsandHistories)(CP0.022 InterDels120 Sp2.0 Var 10)(Gamma Dist)'
 if not os.path.exists(folder):
     os.makedirs(folder)
 
@@ -136,13 +136,13 @@ for trial in range(numtrials2):
         if not os.path.exists(folder4):
             os.makedirs(folder4)
 
-        #Parameters from Spiegler and Jirsa, 2013
-        oscillator = models.Generic2dOscillator(tau = numpy.array([1]), a = numpy.array([0.23]),
-                                                b = numpy.array([-0.3333]), c = numpy.array([0]),
+        #Parameters from Ghosh et al, 2009
+        oscillator = models.Generic2dOscillator(tau = numpy.array([1.25]), a = numpy.array([1.05]),
+                                                b = numpy.array([-1]), c = numpy.array([0]),
                                                 I = numpy.array([0]), d = numpy.array([0.1]),
-                                                e = numpy.array([0]), f = numpy.array([1]),
-                                                g = numpy.array([3]), alpha = numpy.array([3]),
-                                                beta = numpy.array([0.27]), gamma = numpy.array([-1]))
+                                                e = numpy.array([0]), f = numpy.array([0.3333]),
+                                                g = numpy.array([1]), alpha = numpy.array([1]),
+                                                beta = numpy.array([0.2]), gamma = numpy.array([-1]))
         
         Q1and3 = numpy.concatenate((left_intra_hem_len, inter_hem_len))
         Q2and4 = numpy.concatenate((inter_hem_len, right_intra_hem_len))
@@ -362,9 +362,9 @@ for trial in range(numtrials2):
     powermeansleft = numpy.mean(osc_powers_for_plot[0:37], axis = 0)
     powermeansright = numpy.mean(osc_powers_for_plot[37:74], axis = 0)
 
-    harmonic_ratio_left = numpy.mean(Ratios_per_delay[0:37, :], axis = 0) 
+    harmonic_ratio_left = frequencymeansleft[1,:]/frequencymeansleft[0,:]
     harmonic_ratio_left = trunc_n(harmonic_ratio_left, 2)
-    harmonic_ratio_right = numpy.mean(Ratios_per_delay[38:74, :], axis = 0)
+    harmonic_ratio_right = frequencymeansright[1,:]/frequencymeansright[0,:]
     harmonic_ratio_right = trunc_n(harmonic_ratio_right, 2)
 
     #Left Hemisphere
@@ -456,7 +456,7 @@ ind_oscillators_std = numpy.std(osc_frequencies_for_plot_average, axis = 0)
 ind_oscillators_power_averages = numpy.mean(osc_powers_for_plot_average, axis = 0)
 ind_oscillators_power_std = numpy.std(osc_powers_for_plot_average, axis = 0)
 
-harmonic_ratios = numpy.mean(Ratios_per_trial, axis = 0)
+harmonic_ratios = ind_oscillators_std[:, 1, :]/ind_oscillators_std[:, 0, :]
 harmonic_ratios = trunc_n(harmonic_ratios, 2)
 
 #Plot oscillator frequency bands against RH mean delay, averaged over all trials
@@ -524,9 +524,9 @@ oscillator_power_averages_right = numpy.mean(osc_powers_for_plot_average[:, 38:7
 oscillator_power_averages_right_averages = numpy.mean(oscillator_power_averages_right, axis = 0)
 oscillator_power_averages_right_std = numpy.std(oscillator_power_averages_right, axis = 0)
 
-harmonic_ratios_left = numpy.mean(harmonic_ratios[0:37, :], axis = 0)
+harmonic_ratios_left = oscillator_averages_left_averages[1]/oscillator_averages_left_averages[0]
 harmonic_ratios_left = trunc_n(harmonic_ratios_left, 2)
-harmonic_ratios_right = numpy.mean(harmonic_ratios[38:74, :], axis = 0)
+harmonic_ratios_right = oscillator_averages_right_averages[1]/oscillator_averages_right_averages[0]
 harmonic_ratios_right = trunc_n(harmonic_ratios_right, 2)
 
 #Left Hemisphere, band frequency, power, and ratio against RH mean delay
@@ -608,5 +608,3 @@ plt.xlabel('Delay Mean (ms)')
 plt.ylabel('Frequency (Hz)')
 plt.savefig(folder4+'\RSave.png')
 plt.close('all')
-
-
