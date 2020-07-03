@@ -337,7 +337,7 @@ for trial in range(numtrials2):
     #table of ratios to test harmonicity
     for i in nodes:
         
-        fig = plt.figure()
+        fig = plt.figure(figsize = (12, 10))
         grid = plt.GridSpec(8, 1, hspace = 0.05)
         powerplt = plt.subplot(grid[0:2])
         freqplt = plt.subplot(grid[2:5])
@@ -369,6 +369,7 @@ for trial in range(numtrials2):
     one_freq_front_right = numpy.mean(one_freq_plot[front_right], axis = 0)
     
     #Left Hemisphere
+    fig = plt.figure(figsize = (12, 10))
     plt.plot(delay_points, one_freq_left, label = 'Left Hem')
     plt.plot(delay_points, one_freq_back_right, label = 'Post-Right Quarter')
     plt.plot(delay_points, one_freq_front_right, label = 'Ant-Right Quarter')
@@ -463,6 +464,7 @@ for trial in range(numtrials2):
     frequencies_for_plot_front_right_average[trial, :] = frequencies_for_plot_front_right
     frequencies_for_plot_left_average[trial, :] = frequencies_for_plot_left
 
+    fig = plt.figure(figsize = (12, 10))
     plt.plot(delay_points, frequencies_for_plot_back_right, label = 'Post Right Hem')
     plt.plot(delay_points, frequencies_for_plot_front_right, label = 'Ant Right Hem')
     plt.plot(delay_points, frequencies_for_plot_left, label = 'Left Hem')
@@ -492,7 +494,7 @@ harmonic_ratios = trunc_n(harmonic_ratios, 2)
 #Plot oscillator frequency bands against RH mean delay, averaged over all trials
 for i in nodes:
 
-    fig = plt.figure()
+    fig = plt.figure(figsize = (12, 10))
     grid = plt.GridSpec(8, 1, hspace = 0.05)
     powerplt = plt.subplot(grid[0:2])
     freqplt = plt.subplot(grid[2:5])
@@ -514,7 +516,7 @@ for i in nodes:
     tableplt.set_yticks([])
     tableplt.set_frame_on(False)
     
-    fig.suptitle('Average Frequency-Delay Curve for Oscillator '+str(i)+'/n Post Right Hem Mean')
+    fig.suptitle('Average Frequency-Delay Curve for Oscillator '+str(i)+'\n Post Right Hem Mean')
     plt.savefig(folder5 + '\Oscillator ' + str(i) + 'Save.png')
     plt.close('all')
     
@@ -666,6 +668,7 @@ frequencies_for_plot_back_right_average_std = numpy.std(frequencies_for_plot_bac
 frequencies_for_plot_front_right_average_std = numpy.std(frequencies_for_plot_front_right_average, axis = 0)
 frequencies_for_plot_left_average_std = numpy.std(frequencies_for_plot_left_average, axis = 0)
 
+fig = plt.figure(figsize = (12, 10))
 plt.errorbar(delay_points, frequencies_for_plot_left_average_average, frequencies_for_plot_left_average_std, label = "Left Hem")
 plt.errorbar(delay_points, frequencies_for_plot_back_right_average_average, frequencies_for_plot_back_right_average_std, label = 'Post Right')
 plt.errorbar(delay_points, frequencies_for_plot_front_right_average_average, frequencies_for_plot_front_right_average_std, label = 'Ant Right')
