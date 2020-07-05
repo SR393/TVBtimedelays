@@ -52,10 +52,11 @@ from tvb.datatypes import time_series
 from tvb.basic.config import settings
 import matplotlib.pyplot as plt
 import os as os
+from pycorrgram import pybuffer
 
 #John Doe, 76 nodes
 white_matter = connectivity.Connectivity.from_file()
-speed = 2.0
+speed = 2.5
 white_matter.speed = numpy.array([speed])
 white_matter_coupling = coupling.Linear(a=numpy.array([0.025]))
 weights = white_matter.weights
@@ -70,14 +71,15 @@ what_to_watch = (mon_tavg, )
 
 nodes = numpy.arange(0, 74)
 
-n = [2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10] #mean fibre length = 10*n 
+n = [2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5] #mean fibre length = 10*n 
 numtrials = len(n)
-numtrials2 = 5
+numtrials2 = 6
 delay_points = numpy.asarray(n)*(10/speed)
+print(delay_points)
 
 upto = 1
 
-folder = r'L:\Lab_JamesR\sebastianR\Data\DelaysVariance\Spiegler and Jirsa Parameters\Freq_Delay_Runs\Group7(Random ICsandHistories)(CP0.025 InterDels120 Sp2.0 Var 10)(Gamma Dist)'
+folder = r'L:\Lab_JamesR\sebastianR\Data\DelaysVariance\Spiegler and Jirsa Parameters\Freq_Delay_Runs\Group7(Random ICsandHistories)(CP0.025 InterDels120 Sp2.5 Var 10)(Gamma Dist)'
 if not os.path.exists(folder):
     os.makedirs(folder)
 
@@ -222,7 +224,7 @@ for trial in range(numtrials2):
             fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize = (14, 10), gridspec_kw = {'hspace':0.4})
             ax1.imshow(nodepowermapplot, cmap = 'viridis', aspect='auto')
             ax1.set_ylabel("Frequency (Hz)")
-            ax1.set_xticklabels("")
+            ax1.set_xticks([])
             yticks = numpy.arange(0, 1750, 250)
             ax1.set_yticks(yticks)
             ax1.set_yticklabels(["70","60","50", "40", "30", "20", "10"])
@@ -533,7 +535,7 @@ harmonic_ratios_right = trunc_n(harmonic_ratios_right, 2)
 fig = plt.figure()
 grid = plt.GridSpec(8, 1, hspace = 0.05)
 powerplt = plt.subplot(grid[0:2])
-freqplt = plt.subplot(grid[2:6])
+freqplt = plt.subplot(grid[2:5])
 tableplt = plt.subplot(grid[6:7])
 
 powerplt.errorbar(delay_points, oscillator_power_averages_left_averages[0], oscillator_power_averages_left_std[0], label = 'Lower Band', capsize = 5)
@@ -545,11 +547,10 @@ powerplt.legend(loc = 'best')
 freqplt.errorbar(delay_points, oscillator_averages_left_averages[0], oscillator_averages_left_std[0], label = 'Lower Band', capsize = 5)
 freqplt.errorbar(delay_points, oscillator_averages_left_averages[1], oscillator_averages_left_std[1], label = 'Upper Band', capsize = 5)
 freqplt.legend(loc = 'best')
-freqplt.text(7.5, 12, str(Harmonic))
 freqplt.set_xlabel('Right Hem Delay Mean (ms)')
 freqplt.set_ylabel('Frequency (Hz)')
 
-tableplt.table(cellText = [delay_points, harmonic_ratios_left], rowLabels = ['Mean RH Delay (ms)', 'Ratio (U/L)'], loc = 'upper center')
+tableplt.table(cellText = [delay_points, harmonic_ratios_left], rowLabels = ['Delay (ms)', 'Ratio (U/L)'], loc = 'upper center')
 tableplt.set_xticks([])
 tableplt.set_yticks([])
 tableplt.set_frame_on(False)
@@ -560,11 +561,12 @@ plt.close('all')
 
 #Right Hemisphere, band frequency, power, and ratio against mean delay, average maximum delay for each trial
 Max_delays = numpy.mean(Max_delays, axis = 0)
+Max_delays = trunc_n(Max_delays, 2)
 
 fig = plt.figure()
 grid = plt.GridSpec(8, 1, hspace = 0.05)
 powerplt = plt.subplot(grid[0:2])
-freqplt = plt.subplot(grid[2:6])
+freqplt = plt.subplot(grid[2:5])
 tableplt = plt.subplot(grid[6:7])
 
 powerplt.errorbar(delay_points, oscillator_power_averages_right_averages[0], oscillator_power_averages_right_std[0], label = 'Lower Band', capsize = 5)
@@ -579,7 +581,7 @@ freqplt.legend(loc = 'best')
 freqplt.set_xlabel('Delay Mean (ms)')
 freqplt.set_ylabel('Frequency (Hz)')
 
-tableplt.table(cellText = [delay_points, harmonic_ratios_right, Max_delays], rowLabels = ['Mean Delay (ms)', 'Ratio (U/L)', 'Max RH Delay (ms)'], loc = 'upper center')
+tableplt.table(cellText = [delay_points, harmonic_ratios_right, Max_delays], rowLabels = ['Delay (ms)', 'Ratio (U/L)', 'Max Delay (ms)'], loc = 'upper center')
 tableplt.set_xticks([])
 tableplt.set_yticks([])
 tableplt.set_frame_on(False)

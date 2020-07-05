@@ -52,6 +52,7 @@ from tvb.datatypes import time_series
 from tvb.basic.config import settings
 import matplotlib.pyplot as plt
 import os as os
+from pycorrgram import pybuffer
 
 #John Doe, 76 nodes
 white_matter = connectivity.Connectivity.from_file()
@@ -533,7 +534,7 @@ harmonic_ratios_right = trunc_n(harmonic_ratios_right, 2)
 fig = plt.figure()
 grid = plt.GridSpec(8, 1, hspace = 0.05)
 powerplt = plt.subplot(grid[0:2])
-freqplt = plt.subplot(grid[2:6])
+freqplt = plt.subplot(grid[2:5])
 tableplt = plt.subplot(grid[6:7])
 
 powerplt.errorbar(delay_points, oscillator_power_averages_left_averages[0], oscillator_power_averages_left_std[0], label = 'Lower Band', capsize = 5)
@@ -545,7 +546,6 @@ powerplt.legend(loc = 'best')
 freqplt.errorbar(delay_points, oscillator_averages_left_averages[0], oscillator_averages_left_std[0], label = 'Lower Band', capsize = 5)
 freqplt.errorbar(delay_points, oscillator_averages_left_averages[1], oscillator_averages_left_std[1], label = 'Upper Band', capsize = 5)
 freqplt.legend(loc = 'best')
-freqplt.text(7.5, 12, str(Harmonic))
 freqplt.set_xlabel('Right Hem Delay Mean (ms)')
 freqplt.set_ylabel('Frequency (Hz)')
 
@@ -560,11 +560,12 @@ plt.close('all')
 
 #Right Hemisphere, band frequency, power, and ratio against mean delay, average maximum delay for each trial
 Max_delays = numpy.mean(Max_delays, axis = 0)
+Max_delays = trunc_n(Max_delays, 2)
 
 fig = plt.figure()
 grid = plt.GridSpec(8, 1, hspace = 0.05)
 powerplt = plt.subplot(grid[0:2])
-freqplt = plt.subplot(grid[2:6])
+freqplt = plt.subplot(grid[2:5])
 tableplt = plt.subplot(grid[6:7])
 
 powerplt.errorbar(delay_points, oscillator_power_averages_right_averages[0], oscillator_power_averages_right_std[0], label = 'Lower Band', capsize = 5)
