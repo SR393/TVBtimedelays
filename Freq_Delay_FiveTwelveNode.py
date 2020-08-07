@@ -55,6 +55,11 @@ folder = r'L:\Lab_JamesR\sebastianR\Data\DelaysVariance\Generic2d\512Node\Spiegl
 #set up connectivity
 wm = connectivity.Connectivity.from_file('geombinsurr_partial_000_Gs.zip')
 numnodes = 512
+positions = wm.centres.transpose()
+labels = wm.region_labels.transpose()
+nodes = np.arange(1, 513)
+nodes = np.array([''.join(item) for item in nodes.astype(str)])
+nodes = nodes.reshape(512, 1)
 
 #oscillator model and parameters (Spiegler and Jirsa, 2013)
 oscillator = models.Generic2dOscillator(tau = np.array([1]), a = np.array([0.23]),
@@ -66,7 +71,7 @@ oscillator = models.Generic2dOscillator(tau = np.array([1]), a = np.array([0.23]
 #simulation parameters
 dt = 2**-4
 integrator = integrators.HeunDeterministic(dt = dt)
-simlength = 10000
+simlength = 5000
 simsteps = simlength/dt
 cp = 0.5
 mon_raw = monitors.Raw()
@@ -134,11 +139,12 @@ if One:
     if not os.path.exists(Datafolder):
         os.makedirs(Datafolder)
         
-    speeds = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
-    speeds = speeds[::-1]
+    speeds = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17])
     delays = np.full(len(speeds), 40)/speeds #to plot against delay instead of speed
-    wm.tract_lengths = np.full((numnodes, numnodes), 40)
-    numtrials = 10
+    tract_lens = np.full((numnodes, numnodes), 40)
+    np.fill_diagonal(tract_lens, 0)
+    wm.tract_lengths = tract_lens
+    numtrials = 4
 
     #Keep track of everything in text file
     with open(folderOne1+'\info.txt', 'w') as info:
@@ -201,14 +207,14 @@ if One:
             print('Simulation Complete')
 
             #Save files to be analysed in neural-flows
-            io.savemat(matlab_files + '\Trial '+str(trial)+', Speed = '+str(sp)+'.mat', {'RawData':RAW})
+            matlab_data = np.mean(RAW.reshape(int(simlength), int(1/(dt)), numnodes), axis = 1)
+            matlab_data = matlab_data[0:200]
+            io.savemat(matlab_files + '\Trial '+str(trial)+', Speed = '+str(sp)+'.mat', {'data':matlab_data, 'locs':positions, 'nodes_str_lbl':labels, 'nodes_num_lbls':nodes})
 
             #Find and plot average time signal (over nodes) and corresponding power spectrum
             avg_signal = np.mean(RAW, axis = 1)
 
-            freq, power = scp.periodogram(avg_signal, fs = 1000/dt, nfft = 4000/dt)
-            print(freq.shape)
-            print(power.shape)
+            freq, power = scp.periodogram(avg_signal, fs = 1000/dt)
 
             freq_comps, comp_powers = find_n_peaks(power, freq, numexpectedpeaks)
             comp_powers = np.argsort(freq_comps)
@@ -216,8 +222,8 @@ if One:
             average_timeseries_frequencies[:, counter] = freq_comps
             average_timeseries_powers[:, counter] = comp_powers
 
-            freq = freq[0:800]
-            power = power[0:800]
+            freq = freq[0:750]
+            power = power[0:750]
 
             fig, axs = plt.subplots(2, 1, figsize = (15, 15))
             axs[0].plot(time, avg_signal)
@@ -260,13 +266,11 @@ if One:
                 powers_to_be_averaged[:, i] = comp_powers
                 
             average_freqs = np.mean(freqs_to_be_averaged, axis = 1)
-            print(average_freqs)
             average_powers = np.mean(powers_to_be_averaged, axis = 1)
             average_frequency_components[:, counter] = average_freqs
-            print(average_frequency_components)
             average_component_powers[:, counter] = average_powers
 
-            requested = False
+            requested = True
 
             counter += 1
             
@@ -452,8 +456,7 @@ if Two:
 
     speed = np.array([4.0])
     numtrials = 2
-    intralambdas = np.array([25, 50, 75, 100, 125, 150, 175, 200])
-    interlambdas = np.array([100, 150, 200])
+    lambdas = np.array([25, 50, 75, 100, 125, 150, 175, 200])
     
     #Keep track of everything in text file
     with open(folderTwo1+'\info.txt', 'w') as info:
@@ -471,6 +474,71 @@ if Two:
     
     overall_average_frequency_components = np.empty((numtrials, numexpectedpeaks, len(speeds)))
     overall_average_component_powers = np.empty((numtrials, numexpectedpeaks, len(speeds)))
+
+    for trial in range(len(numtrials)):
+        
+        folderTwo2 = folderTwo1 + '\Trial '+str(trial)
+
+        if not os.path.exists(folderTwo2):
+            os.makedirs(folderTwo2)
+            
+        matlab_files = folderTwo2 + '\Matlab Files'
+        
+        if not os.path.exists(matlab_files):
+            os.makedirs(matlab_files)
+        
+        counter = 0
+        #Collect IHCCs in this to make comparison diagram at the end of each simulation
+        IHCCplots = np.empty((int(2*opts["maxlag"]/dt) + 1, n_windows, len(lambdas)))
+
+        #Store frequency components and powers of average time signal
+        average_timeseries_frequencies = np.empty((numexpectedpeaks, len(lambdas)))
+        average_timeseries_powers = np.empty((numexpectedpeaks, len(lambdas)))
+
+        #Store frequency components and powers averaged over individual nodes
+        average_frequency_components = np.empty((numexpectedpeaks, len(lambdas)))
+        average_component_powers = np.empty((numexpectedpeaks, len(lambdas)))
+        
+        #compare data against mean, variance, and skewness
+        stats = np.empty((3, len(lambdas)))
+
+        for lmda in lambdas:
+
+            folderTwo3 = folderTwo2 + '\lambda = '+str(lmda)
+
+            if not os.path.exists(folderTwo3):
+                os.makedirs(folderTwo3)
+
+            tracts = lmda*np.random.weibull(3.85, (512, 512))
+            wm.tract_lengths = tracts
+            tracts = tracts.flatten()
+            tracts = tracts[tracts != 0]
+            mu = np.mean(tracts)
+            std = np.std(tracts)
+            var = std**2
+            standardised = (tracts-mu)/std
+            skew = np.mean(standardised**3)
+
+            stats[:, counter] = np.array([mu, var, skew])
+
+            sim = simulator.Simulator(model = oscillator, connectivity = wm,
+                                      coupling = coupling, integrator = integrator, 
+                                      monitors = what_to_watch, simulation_length = simlength + 500).configure()
+            #Run simulation
+            print('Simulation Started')
+            (time, RAW), = sim.run()
+            RAW = RAW[int(500/dt):, 0, :, 0]
+            time = time[int(500/dt):]
+            print('Simulation Complete')
+
+            #Save files to be analysed in neural-flows
+            matlab_data = np.mean(RAW.reshape(int(simlength), int(1/(dt)), numnodes), axis = 1)
+            matlab_data = matlab_data[0:200]
+            io.savemat(matlab_files + '\Trial '+str(trial)+', Speed = '+str(sp)+'.mat', {'data':matlab_data, 'locs':positions, 'nodes_str_lbl':labels, 'nodes_num_lbls':nodes})
+            
+            
+        
+    
 
     
         
