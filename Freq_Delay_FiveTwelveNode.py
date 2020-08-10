@@ -27,7 +27,7 @@ def find_n_peaks(x, f, n):
 
     x, norm = normalize(x)
 
-    peaks, D = scp.find_peaks(x, height = 0.005, distance = 100)
+    peaks, D = scp.find_peaks(x, height = 0.005, distance = 10)
     n_peaks = f[peaks]
     n_peak_heights = x[peaks]
     n_peaks = n_peaks[np.argsort(n_peak_heights)]
@@ -135,7 +135,7 @@ if One:
     if not os.path.exists(Datafolder):
         os.makedirs(Datafolder)
         
-    speeds = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17])
+    speeds = np.array([0.5, 0.66, 0.8, 1, 1.14, 1.33, 1.6, 2, 2.66, 4, 5, 8, 20, 40])
     delays = np.full(len(speeds), 40)/speeds #to plot against delay instead of speed
     tract_lens = np.full((numnodes, numnodes), 40)
     np.fill_diagonal(tract_lens, 0)
@@ -149,7 +149,7 @@ if One:
                    'coherence for each simulation. \n'+
                    'Simulation Parameters: \n dt = '+str(dt)+'ms \n Simulation Length (without transient) = '+str(simlength)+'ms \n Integrator - HeunDeterministic \n Monitor - RawData \n'+
                    'Constant Parameters: \n Oscillator - Spiegler and Jirsa, 2013 \n Global Coupling Strength - '+str(cp)+' \n Network - 512 node \n Weight Matrix - unchanged \n Tract Length Matrix - Uniform (40mm)\n'+
-                   'Variable Parameters: \n Global Conduction Speed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] ms \n')
+                   'Variable Parameters: \n Global Conduction Speed = '+str(speeds)+'ms')
         
     #Store frequency data from each trial
     numexpectedpeaks = 2
@@ -205,7 +205,7 @@ if One:
             #Save files to be analysed in neural-flows
             matlab_data = np.mean(RAW.reshape(int(simlength), int(1/(dt)), numnodes), axis = 1)
             matlab_data = matlab_data[0:200]
-            io.savemat(matlab_files + r'\GTwoDTr'+str(trial)+'Sp'+str(sp)+'.mat', {'data':matlab_data, 'locs':positions})
+            io.savemat(matlab_files + r'\G2DTr'+str(trial)+'Sp'+str(sp)+'.mat', {'data':matlab_data, 'locs':positions})
 
             #Find and plot average time signal (over nodes) and corresponding power spectrum
             avg_signal = np.mean(RAW, axis = 1)
@@ -759,11 +759,12 @@ if Two:
             ax.set_xticks([])
             ax.set_yticks([])
             if idx > 3:
-                ax.set_xlabel(r'(Top) $\lambda$ = '+str(lambdas[idx])+'\n'+r'(Bottom) $\lambda$ = '+str(lambdas[idx+4]))
+                ax.set_xlabel(r'(Top) $\lambda$ = '+str(lambdas[idx-4])+'\n'+r'(Bottom) $\lambda$ = '+str(lambdas[idx]))
 
         fig.text(0.5, 0.04, 'Lambda Values', ha = 'center')
         plt.suptitle('IHCCs Over Different Scale Parameter Values')
         plt.savefig(folderTwo2+r'\IHCCs.png')
+        plt.close('all')
 
     #Get standard deviation and means of frequency information to plot and save
     overall_average_timeseries_frequencies_error = np.std(overall_average_timeseries_frequencies, axis = 0)
@@ -1140,11 +1141,12 @@ if Three:
             ax.set_xticks([])
             ax.set_yticks([])
             if idx > 3:
-                ax.set_xlabel(r'(Top) k = '+str(ks[idx])+'\n'+r'(Bottom) k = '+str(ks[idx+4]))
+                ax.set_xlabel(r'(Top) k = '+str(ks[idx-4])+'\n'+r'(Bottom) k = '+str(ks[idx]))
 
         fig.text(0.5, 0.04, 'k Values', ha = 'center')
         plt.suptitle('IHCCs For different Shape Parameter Values')
         plt.savefig(folderThree2+r'\IHCCs.png')
+        plt.close('all')
 
     #Get standard deviation and means of frequency information to plot and save
     overall_average_timeseries_frequencies_error = np.std(overall_average_timeseries_frequencies, axis = 0)
