@@ -133,14 +133,13 @@ def pycorrgram(*args):
         R = np.mean(Xw*Yi, axis = 1)
         C[cnt] = R
         cnt = cnt + 1
-        
+
+    t = np.arange(0, nx+(window-overlap), window - overlap)
+    lag = np.linspace(-maxlag, maxlag, 2*maxlag + 1)
+    
     #Outputs
     if args == 2:
         
-        t = np.arange(0, nx+(window-overlap), window - overlap)
-        lag = np.linspace(-maxlag, maxlag, 2*maxlag + 1)
-
-
         time = np.arange(np.ceil((nx - overlap)/(window - overlap)))
         T = np.linspace(0, nx - window, Xw.shape[0])
         l = np.linspace(0, 2*maxlag+1, 9)
@@ -153,6 +152,7 @@ def pycorrgram(*args):
         plt.ylabel('Lag')
         plt.colorbar()
         plt.show()
+        return fig
 
     return [C, lag, t]
     
