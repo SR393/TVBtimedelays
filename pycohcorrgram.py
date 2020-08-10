@@ -93,7 +93,7 @@ def pycohcorrgram(*args):
 
     else:
 
-        out = {"cc": Coh[0], "cl":cl, "ct":ct, "opts":opts, "n1":n1, "n2":n2}
+        out = [Coh[0], coh1, coh2, ct, cl]
 
         return out
         
