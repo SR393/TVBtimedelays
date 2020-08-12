@@ -29,13 +29,13 @@ folder = r'C:\Users\Sebastian\miniconda3\envs\TVBEnv\Results\LarterBreakspear\br
 if not os.path.exists(folder):
     os.makedirs(folder)
 
+#used to loop through C and Iext as well
 Cs = [0.8]
 Is = [0.3]
 speeds = [140.0, 120.0, 100.0, 80.0, 60.0]
 #speeds = speeds[::-1]
-#print(speeds)
 
-numnodes = 512
+numnodes = 512 #defined prior to selecting connectivity - don't know what might cause brainwaves to disappear...
 dt = 2**-4
 simlength = 1000
 simsteps = simlength/dt
@@ -64,13 +64,16 @@ ninetysix_node = 'connectivity_96.zip'
 oneninetytwo_node = 'connectivity_192.zip'
 network = fivetwelve_node
 white_matter = connectivity.Connectivity.from_file(network)
+labels = white_matter.region_labels
+
+#this part randomises delays when required, but this does not reproduce (strong) brain waves
 #newtracts = 149.85*np.random.weibull(3.85, (512, 512))
 #mag_newtracts = np.sqrt(np.sum(newtracts**2))
 #mag_tracts = np.sqrt(np.sum(white_matter.tract_lengths**2))
 #FN = 1/(mag_newtracts*mag_tracts)*np.sum(newtracts*white_matter.tract_lengths)
 #print(FN)
 #white_matter.tract_lengths = newtracts
-labels = white_matter.region_labels
+
 
 for C in Cs:
     
@@ -110,8 +113,6 @@ for C in Cs:
                                                  Iext = np.array([I]), tau_K = np.array([1.0]),
                                                  C = gcs_uncoupled)  
 
-            
-
             # in-strength 
             in_strength = white_matter.weights.sum(axis=1)
 
@@ -119,7 +120,7 @@ for C in Cs:
             white_matter.weights /= in_strength
             white_matter.speed = np.array([sp])
 
-            #This section sets up for animations
+            ###This section sets up for animations###
 
             positions = white_matter.centres.transpose()
             x = positions[0]
@@ -137,7 +138,8 @@ for C in Cs:
 
             left = np.arange(0, int(numnodes/2))
             right = np.arange(int(numnodes/2), int(numnodes))
-            #ant-post vs left-righ axes may vary as x or y axes
+
+            #ant-post vs left-righ axes may vary as x or y axes depending on network chosen
 
             if network == seventysix_node or network == oneninetytwo_node:
                 
@@ -157,6 +159,8 @@ for C in Cs:
             front = np.delete(nodes, back)
             under = np.where(z < z_mid)[0]
             over = np.delete(nodes, under)
+
+            ##animation set up done##
 
             # Long-range coupling function is a nonlinear interaction
             coupling_function_par_a = 0.5*QV_max
@@ -208,11 +212,10 @@ for C in Cs:
             (time_a, data_a), = sim.run()
             data_a = data_a[:, 0, :, 0]
 
+            # Plot results -- two spikes, same thing is produced by 'New_LarterBreakspear_Tests' - difference must be in coupling parameters
             plt.plot(time_a, data_a, 'k')
             plt.savefig(folder2+'\History.png')
             plt.close('all')
-
-            # Plot results -- Showing some transient activity until it settles 
 
             # We can now run the actual simulation of interest
             # 1. Change coupling strength cause we had set it to zero
@@ -226,9 +229,11 @@ for C in Cs:
             print('Simulation complete')
             RAW = RAW[:, 0, :, 0]
 
+            #filters out some firing activity for lower speeds
             sos = scp.butter(10, 90, 'hp', output = 'sos', fs = 1000/dt)
             FILT = scp.sosfilt(sos, RAW, axis = 0)
 
+            #plot power spectrum of average signal
             freq, power = scp.periodogram(np.mean(FILT, axis = 1), fs = 1000/dt, nfft = 4000/dt)
             freq = freq[0:1600]
             power = power[0:1600]
@@ -237,6 +242,7 @@ for C in Cs:
             plt.savefig(folder2+'\C='+str(C)+'I='+str(I)+'Sp='+str(sp)+'AVGPower.png')
             plt.close('all')
 
+            #plot spectrogram of average signal - this does not work, but it is not important at the moment. Will fix later
             freq, spec_times, spec = scp.spectrogram(np.mean(FILT, axis = 1), fs = 1000/dt, window = 'boxcar', nperseg = int(simsteps/50))
             print(spec.shape)
             freq = freq[0:400]
@@ -250,6 +256,7 @@ for C in Cs:
             if not os.path.exists(folder3):
                 os.makedirs(folder3)
 
+            #random selection of oscillators (but consistent across trials/reruns of script) to look at power spectra
             oscillators_left = np.array([0, 10, 25, 40, 50, 88, 92, 103, 140, 154, 160, 170, 184, 193, 204, 212, 235, 247])
             oscillators_right = 2*oscillators_left
 
@@ -274,7 +281,7 @@ for C in Cs:
                 plt.savefig(folder3+'\Oscillator'+str(oscr)+'PS.png')
                 plt.close('all')
                 
-
+            #This is defined out of place, but still don't want to move anything - it is used in the animations
             TAVG = np.mean(FILT.reshape(int(dt*4*simsteps), int(1/(dt*4)), numnodes), axis = 1)
             TAVG = TAVG[200:, :]
             timeavg = np.linspace(50, 2500, 9800)
@@ -329,6 +336,7 @@ for C in Cs:
             cmap = mcm.cividis
             norm = colors.Normalize(vmin = np.min(TAVG), vmax = np.max(TAVG))
 
+            #This picks from two options depending on the network
             if ant_post_axis_x:
                             
                 frontview = ax2_frontview.scatter(y[front], z[front], c = TAVG[0, front], cmap = 'coolwarm', s = 150)
@@ -347,7 +355,7 @@ for C in Cs:
                 overview = ax2_overview.scatter(x[over], -y[over], c = TAVG[0, over], cmap = 'coolwarm', s = 150)
                 underview = ax2_underview.scatter(x[under], y[under], c = TAVG[0, under], cmap = 'coolwarm', s = 150)
 
-
+            #makes image, saves to mp4, deletes and repeats
             with writer.saving(fig, folder2+r'\C = '+str(C)+' speed = '+str(sp)+' I0 = '+str(I)+'NET.mp4', 100):
                 for n in range(int(np.rint(TAVG.shape[0]/2))):
                     TAVG_n = TAVG[n, :]
