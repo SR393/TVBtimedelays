@@ -51,7 +51,10 @@ def find_n_peaks(x, f, n):
 mpl.rcParams['animation.ffmpeg_path'] = r'C:\Users\Sebastian\miniconda3\envs\TVBEnv\ffmpeg-20200807-fab00b0-win64-static\bin\ffmpeg.exe'
 writer = animation.FFMpegWriter(fps=30)
 
-folder = r'C:\Users\Sebastian\miniconda3\envs\TVBEnv\Results\LarterBreakspear\C0.6(Internal0.2)\SpectrogramTests'
+folder = r'C:\Users\Sebastian\miniconda3\envs\TVBEnv\Results\LarterBreakspear\TopologyTests'
+
+if not os.path.exists(folder):
+    os.makedirs(folder)
 
 #set up connectivity
 wm = connectivity.Connectivity.from_file('geombinsurr_partial_000_Gs.zip')
@@ -86,7 +89,7 @@ simsteps = simlength/dt
 #cp = 0.5
 mon_raw = monitors.Raw()
 what_to_watch = (mon_raw, )
-a = QV_Max
+a = 0.5*QV_Max
 b = np.array([1.0])
 midpoint = VT
 sigma = delta_V
@@ -94,13 +97,63 @@ coupling = coupling.HyperbolicTangent(a = a, midpoint = VT,
                                       b = b, sigma = sigma)
 in_strengths = wm.weights.sum(axis=1) 
 wm.weights /= in_strengths
-speeds = np.array([4, 20, 50, 100, 120, 140])
+
+#variable parameters
+speeds = np.array([4, 20, 50, 60, 70, 80, 90, 100])
 speeds = speeds[::-1]
+mixing_indices = np.arange(0, 9)
+
+#set up tract length matrices
+#Start by reordering according to Dijkstra's algorithm along tract lengths graph
+tracts = wm.tract_lengths.copy()
+
+path = [293]
+nn = 293 #this starting node gives the shortest path
+
+for i in range(511):
+
+    row_n = tracts[nn].copy()
+    row_n[path] = np.nan
+    nn = np.nanargmin(row_n) #nearest neighbour
+    path.append(nn)
+
+path = np.array(path)
+tracts_mag_squared = np.sum(tracts**2)
+reordered_tracts = tracts[path]
+
+#matrices will be created by shifting rows then mapping back to original order
+#plot values of Frobenius inner product for all row shifts
+Norms_plot = np.empty(256)
+for i in range(256):
+    matrix_i = np.roll(reordered_tracts, i, axis = 0)[np.argsort(path)]
+    Norms_plot[i] = np.sum(tracts*matrix_i)/tracts_mag_squared
+
+plt.plot(np.arange(0, 256), Norms_plot)
+xs = np.array([0, 2, 4, 8, 16, 32, 64, 128, np.argmin(Norms_plot)])
+
+#Mark values to be used
+for i in range(9):
+    plt.vlines(x = xs, ymin = 0.88, ymax = Norms_plot[xs], colors = 'r')
+plt.xticks(xs)
+plt.ylabel('Normed Frobenius IP')
+plt.xlabel('Shift (Matrix Rows)')
+plt.title('Normed Frobenius Inner Product of Shifted Matrices with Tractography Data Matrix')
+plt.savefig(folder+'\FMValuesPlot.png')
+plt.close('all')
+
+#create tract length matrices 
+tract_length_matrices = np.empty((9, 512, 512))
+Frob_Measures = np.empty(9)
+
+for i in range(9):
+    matrix_i = np.roll(reordered_tracts, xs[i], axis = 0)[np.argsort(path)]
+    tract_length_matrices[i] = matrix_i
+    Frob_Measures[i] = np.sum(tracts*matrix_i)/tracts_mag_squared
 
 #For interhemispheric cross coherences
 left = np.arange(0, int(numnodes/2))
 right = np.arange(int(numnodes/2), numnodes)
-opts = {"dt":dt, "maxlag":100, "winlen":100, "overlapfrac":0.8, "inputphases":False}
+opts = {"dt":dt, "maxlag":100, "winlen":50, "overlapfrac":0.8, "inputphases":False}
 maxlag = opts['maxlag']
 window_steps = opts["winlen"]/dt
 window_gap = opts["winlen"]*opts["overlapfrac"]/dt
@@ -117,7 +170,7 @@ for i in range(5):
     
 #set up information for net animations
 animation_length = 500 #(ms)
-positions = wm.centres.transpose()
+positions = wm.centres.copy().transpose()
 x = positions[0]
 y = positions[1]
 z = positions[2]
@@ -138,128 +191,139 @@ over = np.delete(nodes, under)
 
 for sp in speeds:
 
-    transient = np.max(wm.tract_lengths/sp)
-    print(transient)
+    wm.speed = np.array([sp])
 
     folder1 = folder + r'\Speed = '+str(sp)
     if not os.path.exists(folder1):
         os.makedirs(folder1)
 
-    sim = simulator.Simulator(model = oscillator, connectivity = wm,
-                              coupling = coupling, integrator = integrator, conduction_speed = sp,
-                              monitors = what_to_watch, simulation_length = 200).configure()
+    matlab_files = folder1+'\Matlab Files'
+    if not os.path.exists(matlab_files):
+            os.makedirs(matlab_files)
 
-    sim.model.C = uncoupled_C
+    for j in mixing_indices:
+        
+        wm.tract_lengths = tract_length_matrices[j]
+        FM = Frob_Measures[j]
+        folder2 = folder1 + '\FrobMeas = '+str(FM)
+        if not os.path.exists(folder2):
+            os.makedirs(folder2)
 
-    #Set initial conditions
-    print(sim.history.buffer.shape)
-    #Replace history 
-    v_fixed = 0.0
-    sim.history.buffer = v_fixed * np.ones(sim.history.buffer.shape)
-    w_fixed = 0.0
-    z_fixed = 0.0 
+        sim = simulator.Simulator(model = oscillator, connectivity = wm,
+                                coupling = coupling, integrator = integrator, 
+                                monitors = what_to_watch, simulation_length = 200).configure()
 
-    sim.current_state[0, ...] = v_fixed
-    sim.current_state[1, ...] = w_fixed
-    sim.current_state[2, ...] = z_fixed
-    (time_trans, data_trans), = sim.run()
-    data_trans = data_trans[:, 0, :, 0]
+        sim.model.C = uncoupled_C
 
-    plt.plot(time_trans, data_trans, 'k')
-    plt.title('History of All Oscillators, Variable V')
-    plt.xlabel('Time (ms)')
-    plt.savefig(folder1+'\History.png')
-    plt.close('all')
+        #Set initial conditions
+        print(sim.history.buffer.shape)
+        #Replace history 
+        v_fixed = 0.0
+        sim.history.buffer = v_fixed * np.ones(sim.history.buffer.shape)
+        w_fixed = 0.0
+        z_fixed = 0.0 
 
-    print('Started Simulation')
-    coupled_C = np.array([0.6])
-    sim.model.C = coupled_C
-    print(sim.model.C)
-    print(sim.conduction_speed)
-    sim.simulation_length = simlength+500
+        sim.current_state[0, ...] = v_fixed
+        sim.current_state[1, ...] = w_fixed
+        sim.current_state[2, ...] = z_fixed
+        (time_trans, data_trans), = sim.run()
+        data_trans = data_trans[:, 0, :, 0]
 
-    (time, data), = sim.run()
-    time = time[0:int(simlength/dt)]
-    data = data[int(500/dt):, 0, :, 0]
+        plt.plot(time_trans, data_trans, 'k')
+        plt.title('History of All Oscillators, Variable V')
+        plt.xlabel('Time (ms)')
+        plt.savefig(folder2+'\History.png')
+        plt.close('all')
 
-    sos = scp.butter(10, 90, 'hp', output = 'sos', fs = 1000/dt)
-    filtered_data = scp.sosfilt(sos, data, axis = 0)
+        print('Started Simulation')
+        coupled_C = np.array([0.8])
+        sim.model.C = coupled_C
+        sim.simulation_length = simlength+500
 
-    windowlen = 512
-    ovlp = 256
-    spec, freqs, t, im = plt.specgram(np.mean(filtered_data, axis = 1), NFFT = windowlen, noverlap = ovlp, Fs = int(1000/dt),
-                                      aspect = 'auto', cmap = 'cividis')
-    plt.axis(ymin = 0, ymax = 200)
-    plt.xlabel('Time (ms)')
-    plt.savefig(folder1 + '\SpectrogramSp'+str(sp)+'.png')
-    plt.close('all')
-    
-    left = np.arange(0, 256)
-    right = np.arange(256, 512)
+        (time, data), = sim.run()
+        time = time[0:int(simlength/dt)]
+        data = data[int(500/dt):, 0, :, 0]
 
-    [IHCC, ord1, ord2, ct, cl] = pyccg.pycohcorrgram(filtered_data, left, right, opts, False)
-    plt.imshow(IHCC, aspect = 'auto', cmap = 'coolwarm')
-    plt.xticks(xticklocs, trunc_n(np.linspace(0, simlength, len(xticklocs)), 2))
-    plt.yticks(yticklocs, trunc_n(np.linspace(0, simlength, len(yticklocs)), 2))
-    plt.title('IHCC for Speed = '+str(sp))
-    plt.savefig(folder1+'\IHCCSp'+str(sp)+'.png')
+        sos = scp.butter(10, 90, 'hp', output = 'sos', fs = 1000/dt)
+        filtered_data = scp.sosfilt(sos, data, axis = 0)
 
-    print('Making Animation')
+        io.savemat(matlab_files+'\Sp'+str(sp)+'FM'+str(FM)+'.mat', {'data':filtered_data, 'locs':positions})
 
-    TAVG = np.mean(filtered_data.reshape(int(dt*4*simsteps), int(1/(dt*4)), numnodes), axis = 1)#use coarse grained data
+        windowlen = 512
+        ovlp = 256
+        spec, freqs, t, im = plt.specgram(np.mean(filtered_data, axis = 1), NFFT = windowlen, noverlap = ovlp, Fs = int(1000/dt),
+                                        aspect = 'auto', cmap = 'cividis')
+        #plt.axis(ymin = 0, ymax = 200)
+        plt.xlabel('Time (ms)')
+        plt.savefig(folder2 + '\SpectrogramSp'+str(sp)+'FM'+str(FM)+'.png')
+        plt.close('all')
+        
+        left = np.arange(0, 256)
+        right = np.arange(256, 512)
 
-    #Set up figure axes for 'brain net' 
-    fig = plt.figure(figsize = (12, 8))
-    grid = plt.GridSpec(3, 4, wspace = 0, hspace = 0)
-    ax2_frontview = plt.subplot(grid[0, 1])
-    ax2_frontview.set_xticks([])
-    ax2_frontview.set_yticks([])
-    ax2_frontview.set_title('Front')
-    ax2_leftview = plt.subplot(grid[1, 0])
-    ax2_leftview.set_xticks([])
-    ax2_leftview.set_yticks([])
-    ax2_leftview.set_title('Left')
-    ax2_overview = plt.subplot(grid[1, 1])
-    ax2_overview.set_xticks([])
-    ax2_overview.set_yticks([])
-    ax2_rightview = plt.subplot(grid[1, 2])
-    ax2_rightview.set_xticks([])
-    ax2_rightview.set_yticks([])
-    ax2_rightview.set_xlabel('Right')
-    ax2_backview = plt.subplot(grid[2, 1])
-    ax2_backview.set_xticks([])
-    ax2_backview.set_yticks([])
-    ax2_backview.set_xlabel('Back')
-    ax2_underview = plt.subplot(grid[1, 3])
-    ax2_underview.set_xticks([])
-    ax2_underview.set_yticks([])
-    ax2_underview.set_title('Bottom')
-    timestamp = plt.subplot(grid[0, 2])
-    timest = timestamp.text(0.5, 0.5, '0 ms', transform = timestamp.transAxes, fontsize=15)
-    timestamp.set_xticks([])
-    timestamp.set_yticks([])
+        [IHCC, ord1, ord2, ct, cl] = pyccg.pycohcorrgram(filtered_data, left, right, opts, False)
+        plt.imshow(IHCC, aspect = 'auto', cmap = 'coolwarm')
+        plt.xticks(xticklocs, trunc_n(np.linspace(0, simlength, len(xticklocs)), 2))
+        plt.yticks(yticklocs, trunc_n(np.linspace(0, simlength, len(yticklocs)), 2))
+        plt.title('IHCC for Speed = '+str(sp)+', Frobenius Inner Product = '+str(FM))
+        plt.savefig(folder2+'\IHCCSp'+str(sp)+'FM'+str(FM)+'.png')
 
-    cmap = mcm.cividis
-    norm = colors.Normalize(vmin = np.min(TAVG), vmax = np.max(TAVG))
+        print('Making Animation')
 
-    #Initial frames
-    frontview = ax2_frontview.scatter(-x[front], z[front], c = TAVG[0, front], cmap = 'cividis', s = 150)
-    backview = ax2_backview.scatter(x[back], z[back], c = TAVG[0, back], cmap = 'cividis', s = 150)
-    leftview = ax2_leftview.scatter(-y[left], z[left], c = TAVG[0, left], cmap = 'cividis', s = 150)
-    rightview = ax2_rightview.scatter(y[right], z[right], c = TAVG[0, right], cmap = 'cividis', s = 150)
-    overview = ax2_overview.scatter(x[over], -y[over], c = TAVG[0, over], cmap = 'cividis', s = 150)
-    underview = ax2_underview.scatter(x[under], y[under], c = TAVG[0, under], cmap = 'cividis', s = 150)
+        TAVG = np.mean(filtered_data.reshape(int(dt*4*simsteps), int(1/(dt*4)), numnodes), axis = 1)#use coarse grained data
 
-    #make and save animations frame-by-frame
-    with writer.saving(fig, folder1+r'\AnimationSpeed'+str(sp)+'NET.mp4', 100):
-        for n in range(int(np.rint(animation_length*4))):
-            TAVG_n = TAVG[n, :]
-            frontview.set_color(cmap(norm(TAVG_n[front])))
-            backview.set_color(cmap(norm(TAVG_n[back])))
-            overview.set_color(cmap(norm(TAVG_n[over])))
-            underview.set_color(cmap(norm(TAVG_n[under])))
-            leftview.set_color(cmap(norm(TAVG_n[left])))
-            rightview.set_color(cmap(norm(TAVG_n[right])))
-            timest.set_text(str(n/4)+' ms')
-            writer.grab_frame()
-    plt.close('all')
+        #Set up figure axes for 'brain net' 
+        fig = plt.figure(figsize = (12, 8))
+        grid = plt.GridSpec(3, 4, wspace = 0, hspace = 0)
+        ax2_frontview = plt.subplot(grid[0, 1])
+        ax2_frontview.set_xticks([])
+        ax2_frontview.set_yticks([])
+        ax2_frontview.set_title('Front')
+        ax2_leftview = plt.subplot(grid[1, 0])
+        ax2_leftview.set_xticks([])
+        ax2_leftview.set_yticks([])
+        ax2_leftview.set_title('Left')
+        ax2_overview = plt.subplot(grid[1, 1])
+        ax2_overview.set_xticks([])
+        ax2_overview.set_yticks([])
+        ax2_rightview = plt.subplot(grid[1, 2])
+        ax2_rightview.set_xticks([])
+        ax2_rightview.set_yticks([])
+        ax2_rightview.set_xlabel('Right')
+        ax2_backview = plt.subplot(grid[2, 1])
+        ax2_backview.set_xticks([])
+        ax2_backview.set_yticks([])
+        ax2_backview.set_xlabel('Back')
+        ax2_underview = plt.subplot(grid[1, 3])
+        ax2_underview.set_xticks([])
+        ax2_underview.set_yticks([])
+        ax2_underview.set_title('Bottom')
+        timestamp = plt.subplot(grid[0, 2])
+        timest = timestamp.text(0.5, 0.5, '0 ms', transform = timestamp.transAxes, fontsize=15)
+        timestamp.set_xticks([])
+        timestamp.set_yticks([])
+
+        cmap = mcm.cividis
+        norm = colors.Normalize(vmin = np.min(TAVG), vmax = np.max(TAVG))
+
+        #Initial frames
+        frontview = ax2_frontview.scatter(-x[front], z[front], c = TAVG[0, front], cmap = 'cividis', s = 150)
+        backview = ax2_backview.scatter(x[back], z[back], c = TAVG[0, back], cmap = 'cividis', s = 150)
+        leftview = ax2_leftview.scatter(-y[left], z[left], c = TAVG[0, left], cmap = 'cividis', s = 150)
+        rightview = ax2_rightview.scatter(y[right], z[right], c = TAVG[0, right], cmap = 'cividis', s = 150)
+        overview = ax2_overview.scatter(x[over], -y[over], c = TAVG[0, over], cmap = 'cividis', s = 150)
+        underview = ax2_underview.scatter(x[under], y[under], c = TAVG[0, under], cmap = 'cividis', s = 150)
+
+        #make and save animations frame-by-frame
+        with writer.saving(fig, folder2+r'\AnimationSpeed'+str(sp)+'FM'+str(FM)+'NET.mp4', 100):
+            for n in range(int(np.rint(animation_length*4))):
+                TAVG_n = TAVG[n, :]
+                frontview.set_color(cmap(norm(TAVG_n[front])))
+                backview.set_color(cmap(norm(TAVG_n[back])))
+                overview.set_color(cmap(norm(TAVG_n[over])))
+                underview.set_color(cmap(norm(TAVG_n[under])))
+                leftview.set_color(cmap(norm(TAVG_n[left])))
+                rightview.set_color(cmap(norm(TAVG_n[right])))
+                timest.set_text(str(n/4)+' ms')
+                writer.grab_frame()
+        plt.close('all')
