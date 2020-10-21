@@ -1,3 +1,4 @@
+%Creates json file for input data in order to run neural-flows analysis
 function pick_data(filename, parset_file, parfolder)
 fid = fopen('C:\\Users\\Sebastian\\Documents\\MATLAB\\neural-flows\\TVBFiles\\template.json', 'r');
 i = 1;
