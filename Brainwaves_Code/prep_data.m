@@ -1,3 +1,5 @@
+%transposes locs file if necessary, changes data filename, and
+%runs through coarsgrain() to coarse-grain data nad cut from 1500ms - 1600ms
 function prep_data(datafile, st, fn, outname, Il, spc)
 if Il
 load(datafile);
