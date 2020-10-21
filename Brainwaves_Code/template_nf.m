@@ -1,3 +1,4 @@
+%template neural flows function to perform neural flows analysis
 function template_nf(jsonfolder, filename, savefigloc)
 
 input_params_filename = strcat(filename, '.json');
