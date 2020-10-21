@@ -1,3 +1,4 @@
+#coarse-grains data (averages over every 4 data points) and cuts from 1500 - 1600ms
 function out = coarsegrain(data, avg_period, dt, st, fin)
 st = st/dt + 1;
 fin = fin/dt;
