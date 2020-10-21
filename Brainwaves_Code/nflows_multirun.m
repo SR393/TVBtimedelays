@@ -1,3 +1,5 @@
+%prepares raw data, then creates json file from template and runs coarse data through
+%neural flows with template_nf
 function nflows_multirun(parset_file, simset_file, Il, spc, kl)
 
 rawdatafolder = strcat('C:\\Users\\Sebastian\\Documents\\MATLAB\\neural-flows\\TVBRawData\\', parset_file, simset_file);
