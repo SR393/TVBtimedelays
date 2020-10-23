@@ -11,7 +11,11 @@ Most code was written in python, with a small amount in Brainwaves_Code written 
 Brainwaves_Code is split into 5 further folders, which are
 
 i) Animations: scripts which create animations of simulated activity.
+
 ii) IHCCs: scripts which extract signal phases, run cross correlations, and subsequently create interhemispheric cross-correlations for simulated data.
+
 iii) R_local Curves: scripts which calculate local order parameters for set values of the radius of inclusion (OrderPars...) and then plot these to obtain R_local curves (rlocals...) for coherence analysis.
+
 iv) Simulations: scripts which run simulations using TVB.
+
 v) neural-flows analysis: scripts which take simulated data, cut 1500-1600ms segment, temporally coarse-grain, and then run it through neural-flows to obtain flow patterns.
