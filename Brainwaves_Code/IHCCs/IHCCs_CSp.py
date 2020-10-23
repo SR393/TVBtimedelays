@@ -1,4 +1,5 @@
 #Creates individual interhemispheric cross-correlations (IHCC) for each simulation in (K, s) space
+#Results presented in thesis section 5.3
 
 from tvb.simulator.lab import *
 import pycohcorrgram as pyccg
