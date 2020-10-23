@@ -3,7 +3,6 @@ import pycorrgram as cg
 import scipy.signal as scp
 import matplotlib.pyplot as plt
 
-#I don't know who wrote this one
 def pyphase_nodes(y):
 
     phases = np.zeros(y.shape)
@@ -24,7 +23,7 @@ def pyphase_nodes(y):
 #physical timestep, maximum lag, window length, overlap fraction (of window
 #length) and "inputphases", a Boolean object False by default, True if inputs
 #are phase signals. Also a Boolean object (True by default) indicating whether
-#outputs should be figure or dictionary of outputs.Originally written in MATLAB
+#outputs should be figure or dictionary of outputs. Originally written in MATLAB
 #by JA Roberts, QIMR Berghofer, 2018.
 def pycohcorrgram(*args):
 
