@@ -1,5 +1,5 @@
-#Translation of corrgram function in MATLAB for windowed time lagged
-#cross-correlation of two time series, originally written by Norbert Marwan,
+#Translation of corrgram function in MATLAB. Evaluates windowed time lagged
+#cross-correlation of two time series. Originally written in MATLAB by Norbert Marwan,
 #Potsdam University, Germany
 
 #Input time series y1 and y2 for which the cross-correlation is to be calculated
@@ -45,6 +45,7 @@ def pybuffer(A, n, o):
 
     return B
 
+#creates the cross-correlation
 def pycorrgram(*args):
 
     x = args[0]
@@ -88,7 +89,7 @@ def pycorrgram(*args):
                 if overlap >= window:
                     raise ValueError("Requires overlap to be strictly less than window length")
         
-    #Create time delayed signals
+    #Create time lagged signals
     X = np.zeros((maxlag + 1, nx))
     Y = np.zeros((maxlag + 1, ny))
 
