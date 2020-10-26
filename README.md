@@ -6,7 +6,7 @@ Two main subfolders are included in the repository, along with a folder for misc
 1. Brainwaves_Code: this contains most of the code that was ultimately used in the project results.
 2. Frequency-Delay Code: This contains code from investigations earlier in the project, which were ultimately excluded from the results.
 
-Most code was written in python, with a small amount in Brainwaves_Code written in MATLAB in order to function with the neural-flows toolbox (https://github.com/brain-modelling-group/neural-flows). The simulations are run via neuroinformatics platfrom The Virtual Brain (TVB; https://github.com/the-virtual-brain/tvb-root). Most code is designed with the sole purpose of functioning on the author's system as of the time of writing, so that in many cases direct references are made to paths specific to that purpose.
+Most code was written in python, with a small amount in Brainwaves_Code written in MATLAB in order to function with the neural-flows toolbox (https://github.com/brain-modelling-group/neural-flows). The simulations are run via neuroinformatics platfrom The Virtual Brain (TVB; https://github.com/the-virtual-brain/tvb-root).
 
 Brainwaves_Code is split into 5 further folders, which are
 
@@ -19,3 +19,12 @@ iii) R_local Curves: scripts which calculate local order parameters for set valu
 iv) Simulations: scripts which run simulations using TVB.
 
 v) neural-flows analysis: scripts which take simulated data, cut 1500-1600ms segment, temporally coarse-grain, and then run it through neural-flows to obtain flow patterns.
+
+Most code is designed with the sole purpose of functioning on the author's system as of the time of writing, so that in many cases direct references are made to paths specific to that purpose. All code was designed to run under the following specifications and language/toolbox versions:
+
+OS: Windows 10, 64-bit
+python Version: 3.8.3
+python Manager: conda, v4.8.3
+MATLAB Version: 2019b
+TVB Version: 1.5.8
+
