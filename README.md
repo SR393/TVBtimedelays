@@ -30,103 +30,103 @@ OS:
 python Manager: 
   miniconda. All packages installed and used are listed below. Some important packages and those referenced directly in the code are in bold.
   
-  Name                    Version                  
+  Name: Version                  
   
-  astroid                   2.4.2                   
+  astroid: 2.4.2                   
   
-  blas                      1.0                         
+  blas: 1.0                         
   
-  ca-certificates           2020.6.24                     
+  ca-certificates: 2020.6.24                     
   
-  certifi                   2020.6.20               
+  certifi: 2020.6.20               
   
-  colorama                  0.4.3                    
+  colorama: 0.4.3                    
   
-  cycler                    0.10.0                 
+  cycler: 0.10.0                 
   
-  decorator                 4.4.2              
+  decorator: 4.4.2              
   
-  icc_rt                    2019.0.0             
+  icc_rt: 2019.0.0             
   
-  intel-openmp              2020.1                  
+  intel-openmp: 2020.1                  
   
-  isort                     4.3.21                 
+  isort: 4.3.21                 
   
-  joblib                    0.16.0                  
+  joblib: 0.16.0                  
   
-  kiwisolver                1.2.0                
+  kiwisolver: 1.2.0                
   
-  lazy-object-proxy         1.4.3           
+  lazy-object-proxy: 1.4.3           
   
-  llvmlite                  0.33.0                
+  llvmlite: 0.33.0                
   
-  **matplotlib                3.3.0i**
+  **matplotlib: 3.3.0i**
   
-  mccabe                    0.6.1          
+  mccabe: 0.6.1          
   
-  mkl                       2020.1          
+  mkl: 2020.1          
   
-  mkl-service               2.3.0         
+  mkl-service: 2.3.0         
   
-  mkl_fft                   1.1.0         
+  mkl_fft: 1.1.0         
   
-  mkl_random                1.1.1         
+  mkl_random: 1.1.1         
   
-  networkx                  2.4            
+  networkx: 2.4            
   
-  numba                     0.50.1          
+  numba: 0.50.1          
   
-  numexpr                   2.7.1              
+  numexpr: 2.7.1              
   
-  **numpy                     1.19.1**
+  **numpy: 1.19.1**
   
-  numpy-base                1.19.1
+  numpy-base: 1.19.1
   
-  openssl                   1.1.1g
+  openssl: 1.1.1g
   
-  pillow                    7.2.0
+  pillow: 7.2.0
   
-  **pip                       20.2.1**
+  **pip: 20.2.1**
   
-  pylint                    2.5.3
+  pylint: 2.5.3
   
-  pyparsing                 2.4.7
+  pyparsing: 2.4.7
   
-  **python                    3.8.5**
+  **python: 3.8.5**
   
-  python-dateutil           2.8.1
+  python-dateutil: 2.8.1
   
-  scikit-learn              0.23.1
+  scikit-learn: 0.23.1
   
-  **scipy                     1.5.0**
+  **scipy: 1.5.0**
   
-  setuptools                49.2.1
+  setuptools: 49.2.1
   
-  six                       1.15.0
+  six: 1.15.0
   
-  sqlite                    3.32.3
+  sqlite: 3.32.3
   
-  threadpoolctl             2.1.0
+  threadpoolctl: 2.1.0
   
-  toml                      0.10.1
+  toml: 0.10.1
   
-  **tvb-data                  2.0**
+  **tvb-data: 2.0**
   
-  **tvb-library               2.0.8**
+  **tvb-library: 2.0.8**
   
-  typing                    3.7.4.3
+  typing: 3.7.4.3
   
-  vc                        14.1
+  vc: 14.1
   
-  vs2015_runtime            14.16.27012
+  vs2015_runtime: 14.16.27012
   
-  wheel                     0.34.2
+  wheel: 0.34.2
   
-  wincertstore              0.2
+  wincertstore: 0.2
   
-  wrapt                     1.11.2
+  wrapt: 1.11.2
   
-  zlib                      1.2.11
+  zlib: 1.2.11
 
   Installation process: 
   1. Download miniconda (https://docs.conda.io/en/latest/miniconda.html)
