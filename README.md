@@ -31,7 +31,7 @@ python Manager:
 
 miniconda. All packages installed and used are listed below. Some important packages and those referenced directly in the code are in bold.
   
-  ###### Name: Version                  
+  #### Name: Version                  
   
   astroid: 2.4.2                   
   
